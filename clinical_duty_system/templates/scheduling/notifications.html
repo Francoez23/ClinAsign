@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-header page-header-stack">
+    <h2>Notifications</h2>
+    <p>Stay updated with recent scheduling, class, and patient case activity.</p>
+</div>
+<div class="card notification-panel">
+    <ul class="notification-list">
+        {% for item in notifications %}
+        <li>
+            <strong>{{ item.title }}</strong><br>
+            {{ item.message }}<br>
+            <small>{{ item.created_at }}</small>
+        </li>
+        {% empty %}
+        <li>No notifications available.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

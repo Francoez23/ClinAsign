@@ -1,0 +1,1 @@
+Run: python manage.py makemigrations accounts scheduling && python manage.py migrate

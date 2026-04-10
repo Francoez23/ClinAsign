@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-header">
+    <h2>Patient Cases</h2>
+    {% if user.profile.role == 'INSTRUCTOR' %}
+    <a class="btn" href="{% url 'patient-case-create' %}">Assign Case</a>
+    {% endif %}
+</div>
+<div class="card table-card">
+<table>
+    <thead>
+        <tr>
+            <th>Case Title</th><th>Patient Code</th><th>Diagnosis</th><th>Acuity</th><th>Duty Date</th><th>Student</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for case in cases %}
+        <tr>
+            <td>{{ case.case_title }}</td>
+            <td>{{ case.patient_code }}</td>
+            <td>{{ case.diagnosis }}</td>
+            <td><span class="status-chip">{{ case.get_acuity_level_display }}</span></td>
+            <td>{{ case.duty_schedule.duty_date }}</td>
+            <td>{{ case.duty_schedule.student.get_full_name|default:case.duty_schedule.student.username }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No patient cases found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

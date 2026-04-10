@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="dashboard-intro">
+    <p class="section-kicker">{{ profile.get_role_display }}</p>
+    <h2>Welcome, {{ user.first_name|default:user.username }}</h2>
+    <p class="section-copy">
+        {% if profile.role == 'ADMIN' %}
+            Monitor student counts, facilities, and system-wide activity from one place.
+        {% elif profile.role == 'INSTRUCTOR' %}
+            Manage rotations, students, schedules, and patient case assignments from your portal.
+        {% else %}
+            Review your classes, schedules, assignments, and account details from your portal.
+        {% endif %}
+    </p>
+</section>
+
+<div class="grid dashboard-grid">
+    {% if profile.role == 'ADMIN' %}
+        <div class="card stat-card"><h3>Total Users</h3><p>{{ total_users }}</p></div>
+        <div class="card stat-card"><h3>Students</h3><p>{{ total_students }}</p></div>
+        <div class="card stat-card"><h3>Instructors</h3><p>{{ total_instructors }}</p></div>
+        <div class="card stat-card"><h3>Clinical Areas</h3><p>{{ clinical_areas }}</p></div>
+        <div class="card span-2 action-panel">
+            <h3>Admin Actions</h3>
+            <a class="btn" href="{% url 'clinical-area-list' %}">View Clinical Areas</a>
+            <a class="btn" href="/admin/">Open Django Admin</a>
+        </div>
+    {% elif profile.role == 'INSTRUCTOR' %}
+        <div class="card stat-card"><h3>My Classes</h3><p>{{ class_count }}</p></div>
+        <div class="card stat-card"><h3>Managed Students</h3><p>{{ managed_student_count }}</p></div>
+        <div class="card stat-card"><h3>Joined Students</h3><p>{{ joined_student_count }}</p></div>
+        <div class="card stat-card"><h3>Schedules Managed</h3><p>{{ schedule_count }}</p></div>
+        <div class="card stat-card"><h3>Patient Cases</h3><p>{{ case_count }}</p></div>
+        <div class="card span-2 action-panel">
+            <h3>Instructor Actions</h3>
+            <a class="btn" href="{% url 'group-create' %}">Create Class</a>
+            <a class="btn" href="{% url 'group-list' %}">View Classes</a>
+            <a class="btn" href="{% url 'student-create' %}">Create Student Account</a>
+            <a class="btn" href="{% url 'student-list' %}">Manage Students</a>
+            <a class="btn" href="{% url 'schedule-create' %}">Create Schedule</a>
+            <a class="btn" href="{% url 'schedule-list' %}">Manage Schedules</a>
+            <a class="btn" href="{% url 'patient-case-create' %}">Assign Patient Case</a>
+        </div>
+        <div class="card span-2 data-panel">
+            <h3>My Classes</h3>
+            <ul class="summary-list">
+                {% for group in duty_groups %}
+                    <li>{{ group.name }} - Code: <strong>{{ group.join_code }}</strong> - {{ group.student_count }} student{{ group.student_count|pluralize }}</li>
+                {% empty %}
+                    <li>No classes created yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="card span-2 data-panel">
+            <h3>Recent Schedules</h3>
+            <ul class="summary-list">
+                {% for item in recent_schedules %}
+                    <li>{{ item.title }} - {{ item.student.get_full_name|default:item.student.username }} - {{ item.duty_date }}</li>
+                {% empty %}
+                    <li>No schedules yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <div class="card stat-card"><h3>My Classes</h3><p>{{ class_count }}</p></div>
+        <div class="card stat-card"><h3>My Schedules</h3><p>{{ schedule_count }}</p></div>
+        <div class="card stat-card"><h3>Assigned Cases</h3><p>{{ assigned_cases }}</p></div>
+        <div class="card span-2 data-panel">
+            <h3>Joined Classes</h3>
+            <ul class="summary-list">
+                {% for membership in joined_groups %}
+                    <li>{{ membership.duty_group.name }} - Instructor: {{ membership.duty_group.instructor.get_full_name|default:membership.duty_group.instructor.username }} - Code: <strong>{{ membership.duty_group.join_code }}</strong></li>
+                {% empty %}
+                    <li>You have not joined any classes yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="card span-2 data-panel">
+            <h3>Recent Notifications</h3>
+            <ul class="summary-list">
+                {% for item in notifications %}
+                    <li>{{ item.title }} - {{ item.message }}</li>
+                {% empty %}
+                    <li>No notifications.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

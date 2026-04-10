@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-header">
+    <h2>{% if profile.role == 'INSTRUCTOR' %}My Classes{% else %}Joined Classes{% endif %}</h2>
+    {% if profile.role == 'INSTRUCTOR' %}
+    <a class="btn" href="{% url 'group-create' %}">Create Class</a>
+    {% else %}
+    <a class="btn" href="{% url 'group-join' %}">Join Class</a>
+    {% endif %}
+</div>
+
+<div class="card table-card">
+    {% if profile.role == 'INSTRUCTOR' %}
+    <table>
+        <thead>
+            <tr>
+                <th>Class Name</th>
+                <th>Class Code</th>
+                <th>Students</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for group in groups %}
+            <tr>
+                <td>{{ group.name }}</td>
+                <td><span class="code-pill">{{ group.join_code }}</span></td>
+                <td>{{ group.student_count }}</td>
+                <td>{{ group.created_at|date:"M d, Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">No classes created yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <table>
+        <thead>
+            <tr>
+                <th>Class Name</th>
+                <th>Instructor</th>
+                <th>Class Code</th>
+                <th>Joined</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for membership in memberships %}
+            <tr>
+                <td>{{ membership.duty_group.name }}</td>
+                <td>{{ membership.duty_group.instructor.get_full_name|default:membership.duty_group.instructor.username }}</td>
+                <td><span class="code-pill">{{ membership.duty_group.join_code }}</span></td>
+                <td>{{ membership.joined_at|date:"M d, Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">You have not joined any classes yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+{% endblock %}

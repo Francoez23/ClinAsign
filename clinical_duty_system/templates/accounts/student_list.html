@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-header">
+    <h2>Managed Student Accounts</h2>
+    <a class="btn" href="{% url 'student-create' %}">Create Student Account</a>
+</div>
+
+<div class="card table-card">
+    <table>
+        <thead>
+            <tr>
+                <th>School ID</th>
+                <th>Name</th>
+                <th>Year / Section</th>
+                <th>Assigned Classes</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr>
+                <td>{{ student.student_id }}</td>
+                <td>{{ student.user.get_full_name|default:student.user.username }}</td>
+                <td>
+                    {% if student.year_level or student.section %}
+                        {{ student.year_level|default:'-' }} / {{ student.section|default:'-' }}
+                    {% else %}
+                        Not set
+                    {% endif %}
+                </td>
+                <td>
+                    {% for membership in student.user.managed_memberships %}
+                        {{ membership.duty_group.name }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                        Not assigned
+                    {% endfor %}
+                </td>
+                <td><a class="table-link" href="{% url 'student-update' student.pk %}">Manage</a></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">No student accounts created yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

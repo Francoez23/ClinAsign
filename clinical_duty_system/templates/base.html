@@ -1,0 +1,95 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Duty System</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20260410-logo1">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="{% if request.resolver_match %}page-{{ request.resolver_match.url_name }}{% endif %}">
+    {% if not request.resolver_match or request.resolver_match.url_name != 'login' %}
+    <header class="site-header">
+        <div class="container portal-topbar">
+            <div class="portal-brand">
+                {% if user.is_authenticated %}
+                    {% if user.profile.role == 'INSTRUCTOR' or user.profile.role == 'STUDENT' %}
+                        <img
+                            src="{% static 'images/portal-role-logo-v3.png' %}"
+                            alt="ClinAssign logo"
+                            class="portal-brand-logo"
+                        >
+                    {% else %}
+                        <div class="portal-brand-badge">+</div>
+                    {% endif %}
+                {% else %}
+                    <div class="portal-brand-badge">+</div>
+                {% endif %}
+                <div class="portal-brand-copy">
+                    <p class="portal-brand-kicker">Clinical Duty Scheduling System</p>
+                    <h1>
+                        {% if user.is_authenticated %}
+                            {% if user.profile.role == 'ADMIN' %}
+                                Admin Portal
+                            {% elif user.profile.role == 'INSTRUCTOR' %}
+                                Instructor Portal
+                            {% else %}
+                                Student Portal
+                            {% endif %}
+                        {% else %}
+                            Clinical Duty Scheduling System
+                        {% endif %}
+                    </h1>
+                </div>
+            </div>
+            {% if user.is_authenticated %}
+                <form method="post" action="{% url 'logout' %}" class="logout-form portal-signout">
+                    {% csrf_token %}
+                    <button type="submit">Sign Out</button>
+                </form>
+            {% else %}
+                <nav class="portal-signout">
+                    <a href="{% url 'login' %}">Login</a>
+                </nav>
+            {% endif %}
+        </div>
+
+        {% if user.is_authenticated %}
+        <div class="container">
+            <nav class="portal-nav">
+                <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}is-active{% endif %}">Dashboard</a>
+                <a href="{% url 'group-list' %}" class="{% if request.resolver_match.url_name == 'group-list' or request.resolver_match.url_name == 'group-create' or request.resolver_match.url_name == 'group-join' %}is-active{% endif %}">Classes</a>
+                {% if user.profile.role == 'INSTRUCTOR' %}
+                    <a href="{% url 'student-list' %}" class="{% if request.resolver_match.url_name == 'student-list' or request.resolver_match.url_name == 'student-create' or request.resolver_match.url_name == 'student-update' %}is-active{% endif %}">Student Database</a>
+                {% endif %}
+                {% if user.profile.role == 'ADMIN' %}
+                    <a href="{% url 'clinical-area-list' %}" class="{% if request.resolver_match.url_name == 'clinical-area-list' or request.resolver_match.url_name == 'clinical-area-create' %}is-active{% endif %}">Clinical Facilities</a>
+                {% endif %}
+                {% if user.profile.role == 'INSTRUCTOR' %}
+                    <a href="{% url 'schedule-list' %}" class="{% if request.resolver_match.url_name == 'schedule-list' or request.resolver_match.url_name == 'schedule-create' or request.resolver_match.url_name == 'schedule-update' %}is-active{% endif %}">Rotations</a>
+                    <a href="{% url 'patient-case-list' %}" class="{% if request.resolver_match.url_name == 'patient-case-list' or request.resolver_match.url_name == 'patient-case-create' %}is-active{% endif %}">Patient Cases</a>
+                {% elif user.profile.role == 'STUDENT' %}
+                    <a href="{% url 'student-schedule-list' %}" class="{% if request.resolver_match.url_name == 'student-schedule-list' %}is-active{% endif %}">My Schedule</a>
+                    <a href="{% url 'my-cases' %}" class="{% if request.resolver_match.url_name == 'my-cases' %}is-active{% endif %}">My Cases</a>
+                {% endif %}
+                <a href="{% url 'notifications' %}" class="{% if request.resolver_match.url_name == 'notifications' %}is-active{% endif %}">Notifications</a>
+                <a href="{% url 'profile' %}" class="{% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'password-change' %}is-active{% endif %}">Profile</a>
+            </nav>
+        </div>
+        {% endif %}
+    </header>
+    {% endif %}
+
+    <main class="container main-content{% if request.resolver_match and request.resolver_match.url_name == 'login' %} login-page-main{% endif %}">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{% static 'js/app.js' %}"></script>
+</body>
+</html>

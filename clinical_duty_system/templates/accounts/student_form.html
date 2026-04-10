@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-header page-header-stack">
+    <h2>{{ title }}</h2>
+    <p>Student accounts use the School ID as the login username.</p>
+</div>
+<div class="card form-card">
+    <form method="post" class="styled-form">
+        {% csrf_token %}
+        <div class="form-fields">
+            {{ form.as_p }}
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn">{{ submit_label }}</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

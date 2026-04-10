@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-header">
+    <h2>Duty Schedules</h2>
+    {% if user.profile.role == 'INSTRUCTOR' %}
+    <a class="btn" href="{% url 'schedule-create' %}">Create Schedule</a>
+    {% endif %}
+</div>
+<div class="card table-card">
+<table>
+    <thead>
+        <tr>
+            <th>Title</th><th>Area</th><th>Student</th><th>Date</th><th>Time</th><th>Status</th><th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for schedule in schedules %}
+        <tr>
+            <td>{{ schedule.title }}</td>
+            <td>{{ schedule.clinical_area.name }}</td>
+            <td>{{ schedule.student.get_full_name|default:schedule.student.username }}</td>
+            <td>{{ schedule.duty_date }}</td>
+            <td>{{ schedule.start_time }} - {{ schedule.end_time }}</td>
+            <td><span class="status-chip status-{{ schedule.status|lower }}">{{ schedule.get_status_display }}</span></td>
+            <td>
+                {% if user.profile.role == 'INSTRUCTOR' %}
+                <a class="table-link" href="{% url 'schedule-update' schedule.pk %}">Edit</a>
+                {% else %}
+                View Only
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">No schedules found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}
