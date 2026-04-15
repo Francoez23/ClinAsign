@@ -327,6 +327,26 @@ body.page-login {
     box-shadow: none;
 }
 
+.btn-table-action {
+    min-height: 40px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-size: 0.86rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.table-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 10px 0 18px;
+}
+
+.table-meta .code-pill {
+    min-width: 0;
+}
+
 .form-card form,
 .auth-card form {
     margin: 0;
@@ -459,6 +479,11 @@ tbody tr:last-child td {
     border-bottom: 0;
 }
 
+.table-actions-cell {
+    width: 1%;
+    white-space: nowrap;
+}
+
 .table-link {
     color: #d16c8f;
     font-weight: 700;
@@ -563,6 +588,10 @@ small {
     }
 
     .portal-nav a {
+        width: 100%;
+    }
+
+    .btn-table-action {
         width: 100%;
     }
 }

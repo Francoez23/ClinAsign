@@ -1,17 +1,25 @@
 from functools import wraps
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import PasswordChangeView
+from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, redirect_to_login
 from django.db import transaction
 from django.db.models import Prefetch
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
 
 from scheduling.models import DutyGroupMembership
 
-from .forms import ProfileUpdateForm, StudentAccountCreateForm, StudentAccountUpdateForm
+from .forms import (
+    AccountLoginForm,
+    ProfileUpdateForm,
+    StudentAccountCreateForm,
+    StudentAccountUpdateForm,
+)
 from .models import Profile
 
 
@@ -19,12 +27,12 @@ def instructor_required(view_func):
     @wraps(view_func)
     def wrapped(request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return redirect('login')
+            return redirect_to_login(request.get_full_path())
         if request.user.profile.role != Profile.ROLE_INSTRUCTOR:
             return HttpResponseForbidden('You are not authorized to access this page.')
         return view_func(request, *args, **kwargs)
 
-    return wrapped
+    return never_cache(wrapped)
 
 
 def register(request):
@@ -35,6 +43,18 @@ def register(request):
     return redirect('login')
 
 
+@method_decorator(never_cache, name='dispatch')
+class AccountLoginView(LoginView):
+    authentication_form = AccountLoginForm
+    template_name = 'registration/login.html'
+    redirect_authenticated_user = True
+
+
+@method_decorator(never_cache, name='dispatch')
+class AccountLogoutView(LogoutView):
+    next_page = reverse_lazy('login')
+
+
 def _save_profile_updates(request, form):
     request.user.first_name = form.cleaned_data['first_name']
     request.user.last_name = form.cleaned_data['last_name']
@@ -43,10 +63,9 @@ def _save_profile_updates(request, form):
     form.save()
 
 
+@never_cache
+@login_required
 def profile(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-
     if request.method == 'POST':
         form = ProfileUpdateForm(request.POST, instance=request.user.profile, user=request.user)
         if form.is_valid():
@@ -125,7 +144,9 @@ def student_update(request, pk):
     )
 
 
+@method_decorator(never_cache, name='dispatch')
 class AccountPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
+    login_url = reverse_lazy('login')
     template_name = 'registration/password_change_form.html'
     success_url = reverse_lazy('profile')
 

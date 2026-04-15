@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-header page-header-stack">
+    <div>
+        <p class="section-kicker">Class Roster</p>
+        <h2>{{ group.name }}</h2>
+        <p class="section-copy">Review the students currently enrolled in this class.</p>
+    </div>
+    <a class="btn btn-secondary" href="{% url 'group-list' %}">Back to My Classes</a>
+</div>
+
+<div class="table-meta">
+    <span class="code-pill">Code: {{ group.join_code }}</span>
+    <span class="code-pill">{{ memberships|length }} student{{ memberships|length|pluralize }}</span>
+</div>
+
+<div class="card table-card">
+    <table>
+        <thead>
+            <tr>
+                <th>Student Name</th>
+                <th>Student ID</th>
+                <th>Year / Section</th>
+                <th>Joined</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for membership in memberships %}
+            <tr>
+                <td>{{ membership.student.get_full_name|default:membership.student.username }}</td>
+                <td>{{ membership.student.profile.student_id|default:membership.student.username }}</td>
+                <td>
+                    {% if membership.student.profile.year_level or membership.student.profile.section %}
+                        {{ membership.student.profile.year_level|default:'-' }} / {{ membership.student.profile.section|default:'-' }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ membership.joined_at|date:"M d, Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">No students have joined this class yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

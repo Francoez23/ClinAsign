@@ -1,27 +1,23 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/login.css' %}?v=20260408-3">
+<link rel="stylesheet" href="{% static 'css/login.css' %}?v=20260412-2">
 {% endblock %}
 {% block content %}
 <div class="login-shell">
     <div class="login-card">
-        <img
-            src="{% static 'images/login-brand-v2.png' %}"
-            alt="Saint Paul University Surigao logo"
-            class="login-brand-image"
-        >
+        <div class="login-brand-mark">
+            <img
+                src="{% static 'images/portal-role-logo-v3.png' %}"
+                alt="ClinAssign logo"
+                class="login-brand-image"
+            >
+        </div>
         <h2 class="login-title">Welcome Back</h2>
         <p class="login-eyebrow">Clinical Duty Scheduling System</p>
 
-        <form method="post" class="login-form">
+        <form method="post" class="login-form"{% if form.lockout_active %} data-login-lockout-seconds="{{ form.lockout_seconds_remaining }}"{% endif %}>
             {% csrf_token %}
-            {% if form.non_field_errors %}
-                <div class="login-errors">
-                    {{ form.non_field_errors }}
-                </div>
-            {% endif %}
-
             <div class="login-field-group">
                 <p class="login-field">
                     <label for="id_username">Username or Student ID</label>
@@ -31,28 +27,68 @@
                         id="id_username"
                         value="{{ form.username.value|default:'' }}"
                         placeholder="e.g. C-2023-001 or admin"
-                        autofocus
-                        autocomplete="username"
+                        autocomplete="off"
+                        autocapitalize="none"
+                        autocorrect="off"
+                        spellcheck="false"
+                        readonly
+                        data-plain-text-input
+                        data-lpignore="true"
+                        data-1p-ignore="true"
+                        {% if form.lockout_active %}disabled{% endif %}
                         required
                     >
                 </p>
                 <p class="login-field">
                     <label for="id_password">Password</label>
-                    <input
-                        type="password"
-                        name="password"
-                        id="id_password"
-                        placeholder="Enter your password"
-                        autocomplete="current-password"
-                        required
-                    >
+                    <span class="login-password-wrap">
+                        <input
+                            type="password"
+                            name="password"
+                            id="id_password"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            {% if form.lockout_active %}disabled{% endif %}
+                            required
+                        >
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            data-password-toggle
+                            data-target="id_password"
+                            aria-controls="id_password"
+                            aria-label="Show password"
+                            aria-pressed="false"
+                            {% if form.lockout_active %}disabled{% endif %}
+                        >
+                            <span class="password-toggle-icon" aria-hidden="true">
+                                <svg data-icon-hidden viewBox="0 0 24 24" fill="none" stroke-width="2" stroke="currentColor">
+                                    <path d="M2 12s3.75-6 10-6 10 6 10 6-3.75 6-10 6S2 12 2 12Z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg data-icon-visible viewBox="0 0 24 24" fill="none" stroke-width="2" stroke="currentColor" hidden>
+                                    <path d="M3 3l18 18"></path>
+                                    <path d="M10.58 10.58A2 2 0 0 0 12 14a2 2 0 0 0 1.42-.58"></path>
+                                    <path d="M9.88 5.09A10.94 10.94 0 0 1 12 5c6.25 0 10 7 10 7a18.78 18.78 0 0 1-4.24 4.92"></path>
+                                    <path d="M6.53 6.53C3.98 8.24 2 12 2 12a18.7 18.7 0 0 0 6.08 5.65"></path>
+                                </svg>
+                            </span>
+                            <span data-password-toggle-label>Show</span>
+                        </button>
+                    </span>
                 </p>
             </div>
+
+            {% if form.non_field_errors %}
+                <div class="login-errors" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
 
             {% if next %}
                 <input type="hidden" name="next" value="{{ next }}">
             {% endif %}
-            <button type="submit" class="btn login-submit">Sign In</button>
+            <button type="submit" class="btn login-submit" data-default-label="Sign In" {% if form.lockout_active %}disabled{% endif %}>Sign In</button>
         </form>
     </div>
 </div>

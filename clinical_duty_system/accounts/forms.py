@@ -1,10 +1,107 @@
+import math
+import time
+
 from django import forms
+from django.contrib.auth import authenticate
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 
 from scheduling.models import DutyGroup, DutyGroupMembership
 
 from .models import Profile
+
+
+class AccountLoginForm(AuthenticationForm):
+    MAX_FAILED_ATTEMPTS = 5
+    LOCKOUT_SECONDS = 30
+    FAILED_ATTEMPTS_SESSION_KEY = 'login_failed_attempts'
+    LOCKOUT_UNTIL_SESSION_KEY = 'login_lockout_until'
+    INVALID_CREDENTIALS_MESSAGE = 'Invalid Student ID or Password. Please try again.'
+    LOCKOUT_MESSAGE = 'Too many failed attempts. Please try again later.'
+
+    def __init__(self, request=None, *args, **kwargs):
+        super().__init__(request=request, *args, **kwargs)
+        self.lockout_active = False
+        self.lockout_seconds_remaining = 0
+        self.lockout_active = self._has_active_lockout()
+
+    def _get_session(self):
+        return getattr(self.request, 'session', None)
+
+    def _clear_attempt_state(self):
+        session = self._get_session()
+        if not session:
+            return
+        session.pop(self.FAILED_ATTEMPTS_SESSION_KEY, None)
+        session.pop(self.LOCKOUT_UNTIL_SESSION_KEY, None)
+        session.modified = True
+
+    def _get_lockout_seconds_remaining(self):
+        session = self._get_session()
+        if not session:
+            return 0
+
+        lockout_until = float(session.get(self.LOCKOUT_UNTIL_SESSION_KEY, 0) or 0)
+        remaining = max(0, math.ceil(lockout_until - time.time()))
+        return remaining
+
+    def _has_active_lockout(self):
+        session = self._get_session()
+        if not session or self.LOCKOUT_UNTIL_SESSION_KEY not in session:
+            self.lockout_seconds_remaining = 0
+            return False
+
+        remaining = self._get_lockout_seconds_remaining()
+        if remaining > 0:
+            self.lockout_seconds_remaining = remaining
+            return True
+
+        self._clear_attempt_state()
+        self.lockout_seconds_remaining = 0
+        return False
+
+    def _register_failed_attempt(self):
+        session = self._get_session()
+        if not session:
+            return False
+
+        attempts = int(session.get(self.FAILED_ATTEMPTS_SESSION_KEY, 0)) + 1
+        if attempts >= self.MAX_FAILED_ATTEMPTS:
+            session[self.LOCKOUT_UNTIL_SESSION_KEY] = time.time() + self.LOCKOUT_SECONDS
+            session.pop(self.FAILED_ATTEMPTS_SESSION_KEY, None)
+            session.modified = True
+            self.lockout_active = True
+            self.lockout_seconds_remaining = self.LOCKOUT_SECONDS
+            return True
+
+        session[self.FAILED_ATTEMPTS_SESSION_KEY] = attempts
+        session.modified = True
+        self.lockout_active = False
+        self.lockout_seconds_remaining = 0
+        return False
+
+    def clean(self):
+        username = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+
+        if self._has_active_lockout():
+            raise forms.ValidationError(self.LOCKOUT_MESSAGE, code='too_many_attempts')
+
+        if username and password:
+            self.user_cache = authenticate(self.request, username=username, password=password)
+            if self.user_cache is None:
+                if self._register_failed_attempt():
+                    raise forms.ValidationError(self.LOCKOUT_MESSAGE, code='too_many_attempts')
+                raise forms.ValidationError(
+                    self.INVALID_CREDENTIALS_MESSAGE,
+                    code='invalid_login',
+                )
+
+            self.confirm_login_allowed(self.user_cache)
+            self._clear_attempt_state()
+
+        return self.cleaned_data
 
 
 class ProfileUpdateForm(forms.ModelForm):

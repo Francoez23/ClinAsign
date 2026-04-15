@@ -1,9 +1,13 @@
+from functools import wraps
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import redirect_to_login
 from django.contrib.auth.models import User
 from django.db.models import Count
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.cache import never_cache
 from accounts.models import Profile
 from .forms import ClinicalAreaForm, DutyGroupForm, DutyScheduleForm, JoinDutyGroupForm, PatientCaseForm
 from .models import (
@@ -18,16 +22,18 @@ from .models import (
 
 def role_required(*allowed_roles):
     def decorator(view_func):
+        @wraps(view_func)
         def wrapped(request, *args, **kwargs):
             if not request.user.is_authenticated:
-                return redirect('login')
+                return redirect_to_login(request.get_full_path())
             if request.user.profile.role not in allowed_roles:
                 return HttpResponseForbidden('You are not authorized to access this page.')
             return view_func(request, *args, **kwargs)
-        return wrapped
+        return never_cache(wrapped)
     return decorator
 
 
+@never_cache
 @login_required
 def dashboard(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
@@ -179,6 +185,28 @@ def group_list(request):
 
 
 @role_required(Profile.ROLE_INSTRUCTOR)
+def group_students(request, pk):
+    duty_group = get_object_or_404(
+        DutyGroup.objects.select_related('instructor'),
+        pk=pk,
+        instructor=request.user,
+    )
+    memberships = DutyGroupMembership.objects.filter(duty_group=duty_group).select_related(
+        'student',
+        'student__profile',
+    ).order_by('student__last_name', 'student__first_name', 'student__username')
+
+    return render(
+        request,
+        'scheduling/group_students.html',
+        {
+            'group': duty_group,
+            'memberships': memberships,
+        },
+    )
+
+
+@role_required(Profile.ROLE_INSTRUCTOR)
 def group_create(request):
     if request.method == 'POST':
         form = DutyGroupForm(request.POST, instructor=request.user)
@@ -279,6 +307,7 @@ def my_cases(request):
     return render(request, 'scheduling/patient_case_list.html', {'cases': cases})
 
 
+@never_cache
 @login_required
 def notifications(request):
     items = Notification.objects.filter(user=request.user)

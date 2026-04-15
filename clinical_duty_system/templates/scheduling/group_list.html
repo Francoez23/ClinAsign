@@ -18,6 +18,7 @@
                 <th>Class Code</th>
                 <th>Students</th>
                 <th>Created</th>
+                <th>Roster</th>
             </tr>
         </thead>
         <tbody>
@@ -27,10 +28,15 @@
                 <td><span class="code-pill">{{ group.join_code }}</span></td>
                 <td>{{ group.student_count }}</td>
                 <td>{{ group.created_at|date:"M d, Y" }}</td>
+                <td class="table-actions-cell">
+                    <a class="btn btn-secondary btn-table-action" href="{% url 'group-students' group.pk %}">
+                        View Students
+                    </a>
+                </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="4">No classes created yet.</td>
+                <td colspan="5">No classes created yet.</td>
             </tr>
             {% endfor %}
         </tbody>

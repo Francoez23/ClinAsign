@@ -31,16 +31,6 @@
         <div class="card stat-card"><h3>Joined Students</h3><p>{{ joined_student_count }}</p></div>
         <div class="card stat-card"><h3>Schedules Managed</h3><p>{{ schedule_count }}</p></div>
         <div class="card stat-card"><h3>Patient Cases</h3><p>{{ case_count }}</p></div>
-        <div class="card span-2 action-panel">
-            <h3>Instructor Actions</h3>
-            <a class="btn" href="{% url 'group-create' %}">Create Class</a>
-            <a class="btn" href="{% url 'group-list' %}">View Classes</a>
-            <a class="btn" href="{% url 'student-create' %}">Create Student Account</a>
-            <a class="btn" href="{% url 'student-list' %}">Manage Students</a>
-            <a class="btn" href="{% url 'schedule-create' %}">Create Schedule</a>
-            <a class="btn" href="{% url 'schedule-list' %}">Manage Schedules</a>
-            <a class="btn" href="{% url 'patient-case-create' %}">Assign Patient Case</a>
-        </div>
         <div class="card span-2 data-panel">
             <h3>My Classes</h3>
             <ul class="summary-list">
